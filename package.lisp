@@ -42,7 +42,7 @@
         :ichiran/characters :ichiran/conn :ichiran/numbers)
   (:import-from :postmodern :drop-table)
   (:export :simple-segment :dict-segment :word-info-from-text
-           :word-info :word-info-type :word-info-text
+           :word-info :word-info-type :word-info-seq :word-info-text
            :word-info-kana :word-info-score :map-word-info-kana
            :word-info-str :word-info-components :word-info-alternative
            :word-info-start :word-info-end :word-info-counter :word-info-skipped
