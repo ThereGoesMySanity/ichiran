@@ -491,8 +491,6 @@
   (set-common 'kana-text 1204090 "がいまい" :null)
   (set-common 'kana-text 1459170 "ないほう" :null)
 
-  (set-common 'kana-text 2827401 "ほうがいい" 0)
-  (set-common 'kanji-text 2827401 "方がいい" 0)
   (set-common 'kana-text 2457920 "ですか" :null)
   (set-common 'kana-text 1228390 "すいもの" :null)
   (set-common 'kana-text 1423240 "きもの" 0)
@@ -563,6 +561,8 @@
   (add-errata-apr20)
   (add-errata-jul20)
   (add-errata-jan21)
+  (add-errata-may21)
+  (add-errata-jan22)
   (add-errata-counters)
 
   (ichiran/custom:load-custom-data '(:extra) t)
@@ -658,7 +658,6 @@
   (set-common 'kana-text 2812650 "ゲー" 0)
   (set-common 'kana-text 2083340 "やろう" 0)
   (set-common 'kana-text 2083340 "やろ" 0)
-  (set-common 'kana-text 2122590 "てか" 0)
   (set-common 'kana-text 1008730 "とろ" :null)
   (set-common 'kana-text 1457840 "ないかい" :null)
   (set-common 'kana-text 2829697 "いかん" 0)
@@ -897,6 +896,7 @@
 
   (add-sense-prop 1411570 0 "pos" "vs") ;; 変わり映え
   (add-sense-prop 1613860 0 "pos" "ctr") ;; 回戦
+  (add-sense-prop 1613860 1 "pos" "ctr")
 
   (add-sense-prop 2679820 0 "misc" "uk") ;; しっぽく
   (delete-sense-prop 1426680 "misc" "uk") ;; 虫
@@ -907,6 +907,42 @@
 
   (replace-reading 2847494 "いきはよいといかえりはこわい" "いきはよいよいかえりはこわい")
   )
+
+(defun add-errata-may21 ()
+  (add-reading 1089590 "どんまい")
+
+  (set-common 'kana-text 2848303 "てか" 0)
+  (set-common 'kanji-text 1979920 "貴方" :null)
+
+  (delete-sense-prop 1547720 "misc" "uk") ;; 来る
+  (delete-sense-prop 1495770 "misc" "uk") ;; 付ける
+  (delete-sense-prop 2611890 "misc" "uk") ;; 蒔く
+  )
+
+(defun add-errata-jan22 ()
+
+  (add-reading 1566420 "ハメる")
+  (add-conj-reading 1566420 "ハメる")
+
+  ;; these words had no kana in jmdict
+  (add-reading 1161240 "いっかねん")
+  (add-reading 2209300 "たへる")
+  (add-conj-reading 2209300 "たへる") ;; this doesn't actually work because there are no existing conjugations but whatever
+
+  (set-common 'kana-text  2008650 "そうした" :null)
+  (add-sense-prop 1188270 0 "pos" "n") ;; 何か
+  (delete-sense-prop 1188270 "pos" "pn")
+
+  (delete-sense-prop 1240530 "pos" "ctr") ;; 玉
+
+  (add-sense-prop 1247260 0 "pos" "n-suf") ;; 君　くん
+
+  (set-common 'kana-text 1001840 "おにいちゃん" 0)
+  (set-common 'kana-text 1806840 "がいそう" :null)
+  (set-common 'kana-text 1639750 "こだから" :null)
+
+  )
+
 
 (defun add-errata-counters ()
   (delete-reading 1299960 "さんかい")
@@ -992,6 +1028,7 @@
   (add-gloss 1368480 0 "for N people")
 
   (add-sense-prop 1732510 1 "pos" "ctr") ;; 番手
+  (add-sense-prop 1732510 2 "pos" "ctr")
   (add-sense-prop 2086480 1 "pos" "ctr") ;; 頭身
   )
 
@@ -1061,6 +1098,7 @@
     1423000 ;; 着る
     1164690 ;; 一段
     1587040 ;; 言う
+    2827864 ;; なので
     )
   "Words that get no kanji break penalty")
 
@@ -1072,18 +1110,25 @@
 (defconstant +conj-adverbial+ 50)
 (defconstant +conj-adjective-stem+ 51)
 (defconstant +conj-negative-stem+ 52)
+(defconstant +conj-causative-su+ 53)
+(defconstant +conj-adjective-literary+ 54)
 
 (defun errata-conj-description-hook (hash)
   (setf (gethash +conj-adverbial+ hash) "Adverbial")
   (setf (gethash +conj-adjective-stem+ hash) "Adjective Stem")
-  (setf (gethash +conj-negative-stem+ hash) "Negative Stem"))
+  (setf (gethash +conj-negative-stem+ hash) "Negative Stem")
+  (setf (gethash +conj-causative-su+ hash) "Causative (~su)")
+  (setf (gethash +conj-adjective-literary+ hash) "Old/literary form")
+  )
 
 (defun errata-conj-rules-hook (hash)
   (let* ((pos (get-pos-index "adj-i"))
          (rules (list (make-conjugation-rule pos +conj-adverbial+ nil nil 1
                                              1 "く" "" "")
                       (make-conjugation-rule pos +conj-adjective-stem+ nil nil 1
-                                             1 "" "" ""))))
+                                             1 "" "" "")
+                      (make-conjugation-rule pos +conj-adjective-literary+ nil nil 1
+                                             1 "き" "" ""))))
     (dolist (rule rules)
       (push rule (gethash pos hash nil))))
 
@@ -1105,12 +1150,15 @@
   ;; remove potential forms of vs-s verbs
   (let ((pos (get-pos-index "vs-s")))
     (setf (gethash pos hash) (remove-if (lambda (r) (= (cr-conj r) 5)) (gethash pos hash))))
-  ;; remove 2nd causative form (it's not v1 so it breaks conjugations)
-  ;; and add conj-negative-stem for godan verbs
+  ;; add conj-negative-stem for godan verbs
   (maphash
    (lambda (key value)
-     (let ((val (remove-if (lambda (r) (and (= (cr-conj r) 7) (= (cr-onum r) 2))) value))
+     (let ((val value #-(and)(remove-if (lambda (r) (and (= (cr-conj r) 7) (= (cr-onum r) 2))) value))
            (pos (get-pos key)))
+       (loop for r in val
+             when (and (= (cr-conj r) 7) (= (cr-onum r) 2))
+             do (setf (cr-conj r) +conj-causative-su+ (cr-onum r) 1))
+
        (when (alexandria:starts-with-subseq "v5" pos)
          (let* ((neg-rule (find-if (lambda (r) (and (= (cr-conj r) 1) (cr-neg r) (not (cr-fml r)))) val))
                 (len (length (cr-okuri neg-rule))))
@@ -1132,6 +1180,8 @@
 (defparameter *weak-conj-forms*
   `((,+conj-adjective-stem+ :any :any)
     (,+conj-negative-stem+ :any :any)
+    (,+conj-causative-su+ :any :any)
+    (,+conj-adjective-literary+ :any :any)
     (9 t :any)))
 
 (defun test-conj-prop (prop forms)
